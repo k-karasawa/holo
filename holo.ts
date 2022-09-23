@@ -1,4 +1,7 @@
 import * as THREE from 'three'
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
 
 let right, left, up, down;
 
@@ -7,7 +10,10 @@ export const state = () => {
   const scene = makeScene()
   const config = buildContainer()
   window.addEventListener( 'resize', onWindowResize(camera, config.renderer), false )
-  return Object.assign({}, config, { camera, scene })
+
+  const effectComposer = makeEffect(scene, camera, config.renderer)
+
+  return Object.assign({}, config, { camera, scene, effectComposer })
 }
 
 export const makeCamera = () => {
@@ -60,6 +66,43 @@ export const makeGeometries = scene => {
   scene.add( down );
 }
 
+const makeEffect = (scene, camera, renderer) => {
+const bloomParams = {
+  /** トーンマッピング: 露光量 */
+  exposure: 1.8,
+
+  /** 発光エフェクト: 強さ */
+  bloomStrength: 3.0,
+
+  /** 発光エフェクト: 半径 */
+  bloomRadius: 1.2,
+
+  /** 発光エフェクト: 閾値 */
+  bloomThreshold: 0.0,
+};
+
+  const element = renderer.domElement;
+
+  // エフェクト: 通常レンダリング
+  const renderPass = new RenderPass(scene, camera);
+
+  // エフェクト: 発光エフェクト
+  const bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(element.clientWidth, element.clientHeight),
+    bloomParams.bloomStrength,
+    bloomParams.bloomRadius,
+    bloomParams.bloomThreshold,
+  );
+
+  // エフェクトのセットアップ
+  const effectComposer = new EffectComposer(renderer);
+  effectComposer.addPass(renderPass);
+  effectComposer.addPass(bloomPass);
+  effectComposer.setSize(element.clientWidth, element.clientHeight);
+
+  return effectComposer
+};
+
 export const getTexture = () => {
   //const map = new THREE.TextureLoader().load( 'textures/text' + Math.floor((Math.random() * 21) + 1) + '.jpg' );
   const map = new THREE.TextureLoader().load( 'textures/' + 'akihisa' + '.jpg' );
@@ -97,7 +140,7 @@ export const onWindowResize = (camera, renderer) => {
 
 export const animate = config => {
   requestAnimationFrame( () => animate(config) )
-  render(config.camera, config.scene, config.renderer)
+  render(config.camera, config.scene, config.renderer, config.effectComposer)
 }
 
 export const rotate = scene => {
@@ -107,11 +150,12 @@ export const rotate = scene => {
   })
   return scene
 }
-export const render = (camera, scene, renderer) => {
+export const render = (camera, scene, renderer, effectComposer) => {
   camera.position.x = 60;
   camera.position.y = 0;
   camera.position.z = 0;
   camera.lookAt( scene.position );
   scene = rotate(scene);
-  renderer.render( scene, camera );
+  // renderer.render( scene, camera );
+  effectComposer.render()
 }
