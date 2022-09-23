@@ -17,14 +17,10 @@ export const makeCamera = () => {
 }
 
 export const buildContainer = () => {
-  // const container = document.createElement( 'div' )
-  // document.body.appendChild( container )
   const container = document.getElementById("holo-container")
 
-  // const stats = makeStats()
   const renderer = makeRenderer()
   container.appendChild( renderer.domElement )
-  // container.appendChild( stats.dom )
   return {renderer}
 }
 
@@ -34,7 +30,6 @@ export const makeRenderer = () => {
   renderer.setSize( window.innerWidth, window.innerHeight );
   return renderer
 }
-export const makeStats = () => new Stats()
 
 export const makeScene = () => {
   const scene = new THREE.Scene();
@@ -103,7 +98,6 @@ export const onWindowResize = (camera, renderer) => {
 export const animate = config => {
   requestAnimationFrame( () => animate(config) )
   render(config.camera, config.scene, config.renderer)
-  // config.stats.update()
 }
 
 export const rotate = scene => {
@@ -121,5 +115,3 @@ export const render = (camera, scene, renderer) => {
   scene = rotate(scene);
   renderer.render( scene, camera );
 }
-
-// animate(state())
