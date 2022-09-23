@@ -48,20 +48,20 @@ export const makeScene = () => {
 
 export const makeGeometries = scene => {
   right = getRandomGeometry()
-  right.position.set( -400, 0, -75 );
+  right.position.set( -250, 0, -75 );
   right.rotation.x = -1.5;
   scene.add( right );
   left = right.clone();
-  left.position.set( -400, 0, 75 );
+  left.position.set( -250, 0, 75 );
   left.rotation.x = 1.5;
   scene.add( left );
   up = right.clone()
-  up.position.set( -400, 75, 0 );
+  up.position.set( -250, 75, 0 );
   up.rotation.x = 0	;
   scene.add( up );
   down = right.clone()
   down.rotation.x = 3.1	;
-  down.position.set( -400, -75, 0 );
+  down.position.set( -250, -75, 0 );
   scene.add( down );
 }
 
