@@ -1,0 +1,161 @@
+import * as THREE from 'three'
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
+
+let right, left, up, down;
+
+export const state = () => {
+  const camera = makeCamera()
+  const scene = makeScene()
+  const config = buildContainer()
+  window.addEventListener( 'resize', onWindowResize(camera, config.renderer), false )
+
+  const effectComposer = makeEffect(scene, camera, config.renderer)
+
+  return Object.assign({}, config, { camera, scene, effectComposer })
+}
+
+export const makeCamera = () => {
+  const camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+  camera.position.y = 400
+  return camera
+}
+
+export const buildContainer = () => {
+  const container = document.getElementById("holo-container")
+
+  const renderer = makeRenderer()
+  container.appendChild( renderer.domElement )
+  return {renderer}
+}
+
+export const makeRenderer = () => {
+  const renderer = new THREE.WebGLRenderer( { antialias: true } );
+  renderer.setPixelRatio( window.devicePixelRatio );
+  renderer.setSize( window.innerWidth, window.innerHeight );
+  return renderer
+}
+
+export const makeScene = () => {
+  const scene = new THREE.Scene();
+  scene.add( new THREE.AmbientLight( 0x404040 ) );
+  const light = new THREE.DirectionalLight( 0xffffff );
+  light.position.set( 0, 1, 0 );
+  scene.add( light );
+  makeGeometries(scene)  
+  return scene
+}
+
+export const makeGeometries = scene => {
+  right = getRandomGeometry()
+  right.position.set( -250, 0, -75 );
+  right.rotation.x = -1.5;
+  scene.add( right );
+  left = right.clone();
+  left.position.set( -250, 0, 75 );
+  left.rotation.x = 1.5;
+  scene.add( left );
+  up = right.clone()
+  up.position.set( -250, 75, 0 );
+  up.rotation.x = 0	;
+  scene.add( up );
+  down = right.clone()
+  down.rotation.x = 3.1	;
+  down.position.set( -250, -75, 0 );
+  scene.add( down );
+}
+
+const makeEffect = (scene, camera, renderer) => {
+const bloomParams = {
+  /** トーンマッピング: 露光量 */
+  exposure: 1.8,
+
+  /** 発光エフェクト: 強さ */
+  bloomStrength: 3.0,
+
+  /** 発光エフェクト: 半径 */
+  bloomRadius: 1.2,
+
+  /** 発光エフェクト: 閾値 */
+  bloomThreshold: 0.0,
+};
+
+  const element = renderer.domElement;
+
+  // エフェクト: 通常レンダリング
+  const renderPass = new RenderPass(scene, camera);
+
+  // エフェクト: 発光エフェクト
+  const bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(element.clientWidth, element.clientHeight),
+    bloomParams.bloomStrength,
+    bloomParams.bloomRadius,
+    bloomParams.bloomThreshold,
+  );
+
+  // エフェクトのセットアップ
+  const effectComposer = new EffectComposer(renderer);
+  effectComposer.addPass(renderPass);
+  effectComposer.addPass(bloomPass);
+  effectComposer.setSize(element.clientWidth, element.clientHeight);
+
+  return effectComposer
+};
+
+export const getTexture = () => {
+  //const map = new THREE.TextureLoader().load( 'textures/text' + Math.floor((Math.random() * 21) + 1) + '.jpg' );
+  const map = new THREE.TextureLoader().load( 'textures/' + 'akihisa' + '.jpg' );
+  map.wrapS = map.wrapT = THREE.RepeatWrapping;
+  map.anisotropy = 16;
+  return new THREE.MeshLambertMaterial( { map: map, side: THREE.DoubleSide } );  
+}
+
+export const getRandomGeometry = () => {
+  const geometries = [
+    new THREE.TorusKnotGeometry( 10, 5, 50, 20 ),
+    new THREE.SphereGeometry( 25, 20, 10 ),
+    new THREE.IcosahedronGeometry( 20, 0),
+    new THREE.OctahedronGeometry( 20, 0 ),
+    new THREE.TetrahedronGeometry( 20, 0 ),
+    new THREE.PlaneGeometry( 50, 50, 4, 4 ),
+    new THREE.BoxGeometry( 35, 35, 35, 4, 4, 4 ),
+    new THREE.CircleGeometry( 30, 20, 0, Math.PI * 2 ),
+    new THREE.RingGeometry( 5, 30, 20, 5, 0, Math.PI * 2 ),
+    new THREE.CylinderGeometry( 10, 30, 40, 40, 5 ),
+    new THREE.TorusGeometry( 20, 10, 20, 20 ),
+    new THREE.CircleGeometry( 30, 20, 0, Math.PI * 2 ),
+  ]
+  const geometry = geometries[Math.floor(Math.random() * geometries.length)]
+  const material = getTexture()
+
+  return new THREE.Mesh( geometry, material )
+}
+
+export const onWindowResize = (camera, renderer) => {
+  camera.aspect = window.innerWidth / window.innerHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize( window.innerWidth, window.innerHeight )
+}
+
+export const animate = config => {
+  requestAnimationFrame( () => animate(config) )
+  render(config.camera, config.scene, config.renderer, config.effectComposer)
+}
+
+export const rotate = scene => {
+  scene.children.map(obj => {
+      obj.rotation.z += 0.05
+      obj.rotation.y += 0.01
+  })
+  return scene
+}
+export const render = (camera, scene, renderer, effectComposer) => {
+  camera.position.x = 60;
+  camera.position.y = 0;
+  camera.position.z = 0;
+  camera.lookAt( scene.position );
+  scene = rotate(scene);
+  // renderer.render( scene, camera );
+  effectComposer.render()
+}
