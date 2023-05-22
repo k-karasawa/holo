@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect} from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Environment, useGLTF, Text, Stars, Group } from '@react-three/drei';
+import { useRef } from 'three';
 import dynamic from 'next/dynamic';
 
 const ParticlesBg = dynamic(() => import('particles-bg'), { ssr: false });
@@ -46,8 +47,8 @@ function RotatingStars() {
 
   useFrame(({ clock }) => {
     if (groupRef.current) {
-      groupRef.current.rotation.x = clock.getElapsedTime() * 0.1;
-      groupRef.current.rotation.y = clock.getElapsedTime() * 0.1;
+      groupRef.current.rotation.x = clock.getElapsedTime() * 0.5;
+      groupRef.current.rotation.y = clock.getElapsedTime() * 0.5;
     }
   });
 
